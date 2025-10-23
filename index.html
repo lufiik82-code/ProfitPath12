@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ProfitPath — Trade Journal & Progress Tracker</title>
+
+  <!-- Rounded headline font -->
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#000;
+      --cyan:#00F0E0;
+      --muted:#ffffff;
+      --cta-bg: #00f0e0;
+      --glass-bg: rgba(255,255,255,0.03);
+      --max-width:1100px;
+    }
+
+    /* Reset */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body,#app{height:100%}
+    body{
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: #fff;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow:hidden;
+    }
+
+    /* Canvas full bleed */
+    #starfield { position: fixed; inset: 0; z-index: 0; display:block; }
+
+    /* Top bar */
+    .topbar{
+      position: fixed;
+      inset: 24px 32px auto 32px;
+      display:flex;
+      justify-content:space-between;
+      width: calc(100% - 64px);
+      max-width: var(--max-width);
+      margin: 0 auto;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .brand{ display:flex; align-items:center; gap:12px; pointer-events: auto; }
+    #logo{ display:flex; align-items:center; gap:10px; text-decoration:none; color:inherit; }
+    .logo-mark{
+      width:44px;
+      height:44px;
+      border-radius:50%;
+      background: linear-gradient(135deg, var(--cyan), #00d6ff 60%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 6px 18px rgba(0,240,224,0.12), inset 0 -6px 12px rgba(255,255,255,0.04);
+      font-weight:800;
+      font-family: "Baloo 2";
+      color:#001;
+    }
+    .brand-name{ font-weight:600; font-family:Inter; color:#e6f9f8; }
+
+    .icons{
+      display:flex;
+      gap:16px;
+      align-items:center;
+      pointer-events: auto;
+    }
+    .icon-btn{
+      width:40px;
+      height:40px;
+      border-radius:10px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.03);
+      transition: transform .18s ease, box-shadow .18s;
+    }
+    .icon-btn:hover{
+      transform:translateY(-3px);
+      box-shadow: 0 6px 18px rgba(0,240,224,0.08);
+    }
+    .icon-svg{ width:20px; height:20px; fill:var(--cyan); }
+
+    /* --- Hologram effect --- */
+    .holographic-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1000px;
+      position: relative;
+      height: 300px;
+      margin-bottom: 50px;
+    }
+
+    .holographic-card {
+      position: relative;
+      width: 80%;
+      max-width: 600px;
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+      background: rgba(0, 255, 255, 0.05);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.2), inset 0 0 60px rgba(0, 255, 255, 0.05);
+      transform-style: preserve-3d;
+      animation: hologramFloat 6s ease-in-out infinite alternate;
+      backdrop-filter: blur(8px);
+    }
+
+    .holographic-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,255,255,0.2), rgba(255,255,255,0.05));
+      mix-blend-mode: overlay;
+      border-radius: inherit;
+    }
+
+    @keyframes hologramFloat {
+      0% { transform: rotateY(0deg) rotateX(0deg) translateY(0); box-shadow: 0 0 30px rgba(0,255,255,0.2); }
+      50% { transform: rotateY(8deg) rotateX(4deg) translateY(-10px); box-shadow: 0 0 40px rgba(0,255,255,0.3); }
+      100% { transform: rotateY(-8deg) rotateX(-4deg) translateY(10px); box-shadow: 0 0 25px rgba(0,255,255,0.15); }
+    }
+
+    .holographic-card .headline {
+      font-family: "Baloo 2", Inter;
+      font-size: clamp(40px, 8vw, 90px);
+      font-weight: 800;
+      color: var(--cyan);
+      text-shadow: 0 0 20px rgba(0,255,255,0.7), 0 0 60px rgba(0,255,255,0.2);
+    }
+
+    .holographic-card .subtitle {
+      color: rgba(255,255,255,0.8);
+      font-size: 18px;
+      margin-top: 10px;
+      text-shadow: 0 0 12px rgba(0,255,255,0.3);
+    }
+
+    /* Hero section */
+    .hero{
+      position:relative;
+      z-index: 3;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding: 100px 20px;
+    }
+
+    .hero-inner{ max-width: calc(var(--max-width) - 80px); width:100%; }
+
+    .small-meta{ font-size:12px; color:var(--muted); letter-spacing:1px; margin-bottom:18px; }
+
+    .headline{
+      font-family: "Baloo 2", Inter;
+      font-weight:800;
+      font-size: clamp(36px, 8vw, 84px);
+      line-height:1.02;
+      color: #fff;
+      margin-bottom:18px;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+
+    .subtitle{
+      font-size:16px;
+      color:var(--muted);
+      max-width:860px;
+      margin: 0 auto 28px;
+      line-height:1.6;
+    }
+
+    /* email form */
+    .form-row{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      align-items:center;
+      margin-top:20px;
+      flex-wrap:wrap;
+    }
+    .input{
+      background: var(--glass-bg);
+      border-radius:10px;
+      padding:14px 18px;
+      width:420px;
+      min-width:180px;
+      border: 1px solid rgba(255,255,255,0.04);
+      color:#e6e6e6;
+      outline:none;
+      font-size:15px;
+      transition: box-shadow .15s;
+    }
+    .input:focus{
+      box-shadow: 0 8px 30px rgba(0,240,224,0.06);
+      border-color: rgba(0,240,224,0.2);
+    }
+
+    .cta{
+      background: linear-gradient(180deg, var(--cta-bg), #00d6ff 60%);
+      color:rgb(93, 93, 166);
+      border:none;
+      padding:12px 18px;
+      border-radius:10px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow: 0 8px 30px rgba(0,240,224,0.12);
+      transition: transform .12s ease;
+    }
+    .cta:active{ transform: translateY(1px); }
+
+    .foot-note{
+      margin-top:26px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* Mobile tweaks */
+    @media (max-width:720px){
+      .topbar{ inset: 16px 16px auto 16px; width: calc(100% - 32px) }
+      .logo-mark{ width:36px; height:36px; }
+      .headline{ font-size: clamp(28px, 10vw, 44px) }
+      .input{ width: 100%; max-width:420px; }
+      .form-row{ flex-direction:column; gap:10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Canvas starfield -->
+  <canvas id="starfield"></canvas>
+
+  <!-- Top nav / brand -->
+  <div class="topbar" aria-hidden="false">
+    <div class="brand">
+      <a id="logo" href="#" aria-label="Home (replace with your URL)">
+        <div class="logo-mark">P</div>
+        <div class="brand-name">ProfitPath</div>
+      </a>
+    </div>
+    <div class="icons" role="navigation" aria-label="Social links">
+      <a class="icon-btn" id="tgBtn" href="https://t.me/yourproject" target="_blank" rel="noopener" title="Telegram">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M22 2L2 11l5 2 2 7 4-4 6 4 3-17z"/>
+        </svg>
+      </a>
+      <a class="icon-btn" id="xBtn" href="https://x.com/yourproject" target="_blank" rel="noopener" title="X">
+        <svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.43.36a9.09 9.09 0 0 1-2.86 1.09A4.5 4.5 0 0 0 16.1 0c-2.5 0-4.5 2.28-4.5 5.08 0 .4.04.8.13 1.18A12.8 12.8 0 0 1 1.64 1.15a5 5 0 0 0-.61 2.55c0 1.75.8 3.29 2.03 4.2a4.55 4.55 0 0 1-2.04-.57c0 0 .02 2.1 2.6 3.4A4.6 4.6 0 0 0 7 14a9.5 9.5 0 0 1-5.9 1.84C1.1 15.88 0 15.9 0 15.9a13 13 0 0 0 7.1 2.06c8.5 0 13.2-7.5 13.2-14v-.64A9.4 9.4 0 0 0 23 3z"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Hero + hologram -->
+  <main class="hero" role="main">
+    <div class="hero-inner">
+      <div class="holographic-container">
+        <div class="holographic-card">
+          <h1 class="headline">ProfitPath</h1>
+          <p class="subtitle">Trade Journal & Progress Tracker</p>
+        </div>
+      </div>
+
+      <div class="small-meta">Join our early beta and level up your trading skills.</div>
+      <p class="subtitle">
+        ProfitPath lets you journal every trade, annotate charts, and learn from every decision. Visualize your progress and trade smarter.
+      </p>
+
+      <div class="form-row" role="form" aria-label="Join waitlist">
+        <input id="email" class="input" type="email" placeholder="Enter your email for early access" aria-label="Email address" />
+        <button id="joinBtn" class="cta" type="button">Join Waitlist!</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Starfield canvas
+    (function(){
+      const canvas = document.getElementById('starfield');
+      const ctx = canvas.getContext('2d', { alpha: true });
+      const config = { stars: 8000, starSize: [1.7, 1.4], speed: 0.07, depth: 2.8, twinkle: 0.6, color: [230,255,255] };
+      let W=0, H=0, cx=0, cy=0; let stars=[]; let mouseX=0, mouseY=0, px=0, py=0;
+
+      function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; cx=W/2; cy=H/2; initStars(); }
+      function initStars(){ stars=[]; const count=Math.round(config.stars*Math.max(window.devicePixelRatio,1)); for(let i=0;i<count;i++){ stars.push(spawnStar(true)); } }
+      function spawnStar(initial){ return { x:(Math.random()-0.5)*W*2, y:(Math.random()-0.5)*H*2, z:initial?Math.random()*config.depth:0.001, r:Math.random()*(config.starSize[1]-config.starSize[0])+config.starSize[0], tw:Math.random()*1000 }; }
+      let last=performance.now();
+      function loop(now){ const dt=Math.min(60,now-last)/8000; last=now; update(dt); draw(); requestAnimationFrame(loop); }
+      function update(dt){ px+=(mouseX-px)*1.06; py+=(mouseY-py)*1.06; const move=config.speed*dt*100; for(let s of stars){ s.z+=move*0.02; const k=1/s.z; s.scrx=cx+(s.x-px*0.5)*k; s.scry=cy+(s.y-py*0.5)*k; s.scale=Math.max(0,(1/k)*0.6); s.tw+=dt*config.twinkle*(0.5+Math.random()); if(s.scrx<-50||s.scrx>W+50||s.scry<-50||s.scry>H+50||s.z>config.depth){ Object.assign(s,spawnStar(false)); s.z=0.001; } } }
+      function draw(){ ctx.clearRect(0,0,W,H); ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H); for(let s of stars){ const alpha=0.2+0.8*Math.abs(Math.sin(s.tw*0.6)); const size=Math.max(0.2,s.r*s.scale); const [r,g,b]=config.color; const grad=ctx.createRadialGradient(s.scrx,s.scry,0,s.scrx,s.scry,size*3); grad.addColorStop(0, `rgba(${r},${g},${b},${0.9*alpha})`); grad.addColorStop(0.4, `rgba(${r},${g},${b},${0.25*alpha})`); grad.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(s.scrx,s.scry,size,0,Math.PI*2); ctx.fill(); } }
+      window.addEventListener('mousemove', e=>{ mouseX=(e.clientX-cx)/700; mouseY=(e.clientY-cy)/20; });
+      window.addEventListener('touchmove', e=>{ if(e.touches&&e.touches[0]){ mouseX=(e.touches[0].clientX-cx)/20; mouseY=(e.touches[0].clientY-cy)/20; } }, { passive:true });
+      window.addEventListener('resize', resize); resize(); requestAnimationFrame(loop);
+    })();
+  </script>
+
+</body>
+</html>
